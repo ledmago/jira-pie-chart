@@ -1,0 +1,23 @@
+modules:
+  jira:dashboardGadget:
+    - key: jira-pie-chart-hello-world-gadget
+      title: jira-pie-chart
+      description: A hello world dashboard gadget.
+      thumbnail: https://developer.atlassian.com/platform/forge/images/icons/issue-panel-icon.svg
+      resource: main
+      resolver:
+        function: resolver
+      edit:
+        resource: main
+  function:
+    - key: resolver
+      handler: index.handler
+resources:
+  - key: main
+    path: static/hello-world/build
+permissions:
+  content:
+    styles:
+      - unsafe-inline
+app:
+  id: ari:cloud:ecosystem::app/ada07a22-0420-44e7-b4bf-39439d2473e6
