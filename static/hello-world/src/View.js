@@ -1,11 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { view, invoke } from "@forge/bridge";
 import { PieChart, Pie, Sector, Cell, ResponsiveContainer } from "recharts";
-const data01 = [
-  { name: "Group A", value: 400 },
-  { name: "Group B", value: 300 },
-  { name: "Group C", value: 300 },
-  { name: "Group D", value: 200 },
+const COLORS = [
+  "#B270A2",
+  "#7DCE13",
+  "#0F3D3E",
+  "#876445",
+  "#411530",
+  "#81CACF",
+  "#003865",
+  "#395B64",
+  "#3D3C42",
+  "#D61C4E",
 ];
 
 function View({ projects }) {
@@ -25,7 +31,7 @@ function View({ projects }) {
     const issueTypes = findProject?.issueTypes;
     console.log("issueTypes", issueTypes);
     if (context && projectName && issueTypes) {
-      issueTypes.forEach((issue) => {
+      issueTypes.forEach((issue, index) => {
         invoke("getIssueCount", {
           projectName,
           issueType: issue.id,
@@ -33,7 +39,11 @@ function View({ projects }) {
           console.log("issue", issue.name, res.total, "added");
           setChartData((prev) => [
             ...prev,
-            { name: issue.name, value: res.total },
+            {
+              name: issue.name,
+              value: res.total,
+              fill: COLORS[index % COLORS.length],
+            },
           ]);
         });
       });
@@ -86,7 +96,7 @@ function View({ projects }) {
                 textAnchor={x > cx ? "start" : "end"}
                 dominantBaseline="central"
               >
-                {data01[index]?.name} ({value})
+                {chartData[index]?.name} ({value})
               </text>
             );
           }}
