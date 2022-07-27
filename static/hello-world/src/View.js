@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { view, invoke } from "@forge/bridge";
 import { PieChart, Pie, Sector, Cell, ResponsiveContainer } from "recharts";
-
 const data01 = [
   { name: "Group A", value: 400 },
   { name: "Group B", value: 300 },
@@ -39,7 +38,7 @@ function View() {
   }
 
   return (
-    <div>
+    <div style={styles.container}>
       <PieChart width={400} height={400}>
         <Pie
           data={data01}
@@ -64,4 +63,12 @@ function View() {
   );
 }
 
+const styles = {
+  container: {
+    display: "flex",
+    alignItems: "center",
+    alignSelf: "center",
+    justifyContent: "center",
+  },
+};
 export default View;
