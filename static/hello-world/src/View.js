@@ -7,56 +7,89 @@ const data01 = [
   { name: "Group C", value: 300 },
   { name: "Group D", value: 200 },
 ];
-const data02 = [
-  { name: "A1", value: 100 },
-  { name: "A2", value: 300 },
-  { name: "B1", value: 100 },
-  { name: "B2", value: 80 },
-  { name: "B3", value: 40 },
-  { name: "B4", value: 30 },
-  { name: "B5", value: 50 },
-  { name: "C1", value: 100 },
-  { name: "C2", value: 200 },
-  { name: "D1", value: 150 },
-  { name: "D2", value: 50 },
-];
 
-function View() {
+function View({ projects }) {
   const [context, setContext] = useState();
-  const [data, setData] = useState(null);
+  const [chartData, setChartData] = useState([]);
 
-  useEffect(() => {
-    invoke("getText", { example: "my-invoke-variable" }).then(setData);
-  }, []);
+  useEffect(() => {}, []);
 
   useEffect(() => {
     view.getContext().then(setContext);
   }, []);
 
-  if (!context || !data) {
+  useEffect(() => {
+    const projectName = context?.extension?.gadgetConfiguration?.project?.value;
+    const findProject = projects.find((e) => e.name == projectName);
+    console.log("findProject", findProject);
+    const issueTypes = findProject?.issueTypes;
+    console.log("issueTypes", issueTypes);
+    if (context && projectName && issueTypes) {
+      issueTypes.forEach((issue) => {
+        invoke("getIssueCount", {
+          projectName,
+          issueType: issue.id,
+        }).then((res) => {
+          console.log("issue", issue.name, res.total, "added");
+          setChartData((prev) => [
+            ...prev,
+            { name: issue.name, value: res.total },
+          ]);
+        });
+      });
+    }
+  }, [context]);
+
+  useEffect(() => {
+    console.log("ChartData", chartData);
+  }, [chartData]);
+
+  if (!context || chartData.length < 1) {
     return "Loading...";
   }
 
+  const projectName =
+    context?.extension?.gadgetConfiguration?.project?.value || projects[0].name;
+
   return (
     <div style={styles.container}>
+      <div style={{ fontSize: 25 }}>{projectName}</div>
       <PieChart width={400} height={400}>
         <Pie
-          data={data01}
+          data={chartData}
           dataKey="value"
           cx="50%"
           cy="50%"
           outerRadius={60}
           fill="#8884d8"
-        />
-        <Pie
-          data={data02}
-          dataKey="value"
-          cx="50%"
-          cy="50%"
-          innerRadius={70}
-          outerRadius={90}
-          fill="#82ca9d"
-          label
+          label={({
+            cx,
+            cy,
+            midAngle,
+            innerRadius,
+            outerRadius,
+            value,
+            index,
+          }) => {
+            const RADIAN = Math.PI / 180;
+            // eslint-disable-next-line
+            const radius = 25 + innerRadius + (outerRadius - innerRadius);
+            // eslint-disable-next-line
+            const x = cx + radius * Math.cos(-midAngle * RADIAN);
+            // eslint-disable-next-line
+            const y = cy + radius * Math.sin(-midAngle * RADIAN);
+            return (
+              <text
+                x={x}
+                y={y}
+                fill="#8884d8"
+                textAnchor={x > cx ? "start" : "end"}
+                dominantBaseline="central"
+              >
+                {data01[index]?.name} ({value})
+              </text>
+            );
+          }}
         />
       </PieChart>
     </div>
@@ -69,6 +102,7 @@ const styles = {
     alignItems: "center",
     alignSelf: "center",
     justifyContent: "center",
+    flexDirection: "column",
   },
 };
 export default View;

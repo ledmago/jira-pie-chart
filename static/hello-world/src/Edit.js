@@ -1,26 +1,41 @@
-import React from 'react';
-import Form, { Field } from '@atlaskit/form';
-import TextField from '@atlaskit/textfield';
-import Button, { ButtonGroup } from '@atlaskit/button';
-import { view } from '@forge/bridge';
+import React from "react";
+import Form, { Field } from "@atlaskit/form";
+import TextField from "@atlaskit/textfield";
+import Button, { ButtonGroup } from "@atlaskit/button";
+import { view } from "@forge/bridge";
+import Select from "@atlaskit/select";
 
-function Edit() {
-  const onSubmit = (formData) => view.submit(formData);
-
+function Configration({ setSelectedProject, projects }) {
+  const onSubmit = (formData) => {
+    view.submit(formData);
+  };
   return (
     <Form onSubmit={onSubmit}>
       {({ formProps, submitting }) => (
         <form {...formProps}>
-          <Field name="name" label="Name">
-            {({ fieldProps }) => <TextField {...fieldProps} />}
+          <Field name="project" label="Projects">
+            {({ fieldProps }) => (
+              <Select
+                inputId="single-select-example"
+                className="single-select"
+                classNamePrefix="react-select"
+                options={projects.map((e) => ({
+                  value: e.name,
+                  label: e.name,
+                }))}
+                placeholder="Choose a city"
+                {...fieldProps}
+              />
+            )}
           </Field>
-          <Field name="description" label="Description">
-            {({ fieldProps }) => <TextField {...fieldProps} />}
-          </Field>
-          <br/>
+          <br />
           <ButtonGroup>
-            <Button type="submit" isDisabled={submitting}>Save</Button>
-            <Button appearance="subtle" onClick={view.close}>Cancel</Button>
+            <Button type="submit" isDisabled={submitting}>
+              Save
+            </Button>
+            <Button appearance="subtle" onClick={view.close}>
+              Cancel
+            </Button>
           </ButtonGroup>
         </form>
       )}
@@ -28,4 +43,4 @@ function Edit() {
   );
 }
 
-export default Edit;
+export default Configration;

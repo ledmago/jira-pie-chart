@@ -15,7 +15,17 @@ modules:
 resources:
   - key: main
     path: static/hello-world/build
+    tunnel:
+      port: 3000
 permissions:
+  external:
+      images:
+        - '*.giphy.com'
+        - '*.gravatar.com'
+        - '*.wp.com'
+  scopes:
+    - read:jira-work
+    - storage:app
   content:
     styles:
       - unsafe-inline
