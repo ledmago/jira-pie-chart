@@ -27,16 +27,13 @@ function View({ projects }) {
   useEffect(() => {
     const projectName = context?.extension?.gadgetConfiguration?.project?.value;
     const findProject = projects.find((e) => e.name == projectName);
-    console.log("findProject", findProject);
     const issueTypes = findProject?.issueTypes;
-    console.log("issueTypes", issueTypes);
     if (context && projectName && issueTypes) {
       issueTypes.forEach((issue, index) => {
         invoke("getIssueCount", {
           projectName,
           issueType: issue.id,
         }).then((res) => {
-          console.log("issue", issue.name, res.total, "added");
           setChartData((prev) => [
             ...prev,
             {
@@ -49,10 +46,6 @@ function View({ projects }) {
       });
     }
   }, [context]);
-
-  useEffect(() => {
-    console.log("ChartData", chartData);
-  }, [chartData]);
 
   if (!context || chartData.length < 1) {
     return "Loading...";

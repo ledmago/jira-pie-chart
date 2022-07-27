@@ -23,7 +23,7 @@ function Configration({ setSelectedProject, projects }) {
                   value: e.name,
                   label: e.name,
                 }))}
-                placeholder="Choose a city"
+                placeholder="Choose a project"
                 {...fieldProps}
               />
             )}
