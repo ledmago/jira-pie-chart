@@ -10,6 +10,7 @@
     "@atlaskit/select": "^15.4.0",
     "@atlaskit/textfield": "^5.1.1",
     "@forge/bridge": "^2.4.0",
+    "moment": "^2.29.4",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "recharts": "^2.1.13",

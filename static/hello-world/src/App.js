@@ -6,11 +6,11 @@ import Configration from "./Edit";
 function App() {
   const [context, setContext] = useState();
   const [projects, setProjects] = useState([]);
-  const [selectedProject, setSelectedProject] = useState(null);
+  const [filters, setFilters] = useState([]);
+  const [selectedFilter, setSelectedFilter] = useState(null);
 
   const getProjectsPagination = (page) => {
     invoke("getProjects", { startAt: 0 }).then((response) => {
-      console.log("PROJECTS", response.values);
       setProjects((prev) => [...prev, ...response.values]);
       if (response.isLast == false) {
         getProjectsPagination(page + 1);
@@ -18,9 +18,20 @@ function App() {
     });
   };
 
+  const getFiltersPagination = (page) => {
+    invoke("getFilters").then((response) => {
+      console.log(response.values);
+      setFilters((prev) => [...prev, ...response.values]);
+      if (response.isLast == false) {
+        getFiltersPagination(page + 1);
+      }
+    });
+  };
+
   useEffect(() => {
     view.getContext().then(setContext);
     getProjectsPagination(0);
+    getFiltersPagination(0);
   }, []);
 
   if (!context || projects.length < 1) {
@@ -28,9 +39,14 @@ function App() {
   }
 
   return context.extension.entryPoint === "edit" ? (
-    <Configration projects={projects} setSelectedProject={setSelectedProject} />
+    <Configration projects={projects} />
   ) : (
-    <View projects={projects} />
+    <View
+      projects={projects}
+      filters={filters}
+      setSelectedFilter={setSelectedFilter}
+      selectedFilter={selectedFilter}
+    />
   );
 }
 

@@ -5,7 +5,7 @@ import Button, { ButtonGroup } from "@atlaskit/button";
 import { view } from "@forge/bridge";
 import Select from "@atlaskit/select";
 
-function Configration({ setSelectedProject, projects }) {
+function Configration({ projects }) {
   const onSubmit = (formData) => {
     view.submit(formData);
   };
