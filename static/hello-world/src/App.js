@@ -35,13 +35,14 @@ function App() {
   }, []);
 
   if (!context) {
-    return "Loading..." + projects.length;
+    return "Loading... Main" + projects.length;
   }
 
   return context.extension.entryPoint === "edit" ? (
     <Configration projects={projects} filters={filters} />
   ) : !context?.extension?.gadgetConfiguration?.selectedSourceOrFilter ||
-    !context?.extension?.gadgetConfiguration?.chartBy ? (
+    !context?.extension?.gadgetConfiguration?.chartBy ||
+    !context?.extension?.gadgetConfiguration?.chartType ? (
     <Warning />
   ) : (
     <View projects={projects} filters={filters} />

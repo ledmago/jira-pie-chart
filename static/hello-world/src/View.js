@@ -4,7 +4,10 @@ import { PieChart, Pie, Sector, Cell, ResponsiveContainer } from "recharts";
 import Select from "@atlaskit/select";
 import moment from "moment";
 import "./table.css";
+import { router } from "@forge/bridge";
 import { LoadingButton } from "@atlaskit/button";
+import { chartByTypes } from "./Utils";
+
 const COLORS = [
   "#B270A2",
   "#7DCE13",
@@ -17,16 +20,20 @@ const COLORS = [
   "#3D3C42",
   "#D61C4E",
 ];
+import Chart from "./Chart";
 
 function View({ projects, filters, setSelectedFilter, selectedFilter }) {
   const [context, setContext] = useState();
   const [issues, setIssues] = useState(null);
   const [chartData, setChartData] = useState([]);
 
-  const chartBy = context?.extension?.gadgetConfiguration?.chartBy;
+  const chartBy = chartByTypes.find(
+    (e) => e.value == context?.extension?.gadgetConfiguration?.chartBy.value
+  );
   const selectedSourceOrFilter =
     context?.extension?.gadgetConfiguration?.selectedSourceOrFilter;
 
+  const jqlLink = context?.siteUrl + "/issues/?jql=";
   useEffect(() => {
     view.getContext().then(setContext);
   }, []);
@@ -39,13 +46,16 @@ function View({ projects, filters, setSelectedFilter, selectedFilter }) {
     const field = chartBy?.field;
 
     const chartFields = issues.map((e, index) => {
-      const val = field
-        ? e?.versionedRepresentations[key][1][field]
-        : e?.versionedRepresentations[key][1];
+      let val = null;
+      if (e?.versionedRepresentations[key][1]) {
+        val = field
+          ? e?.versionedRepresentations[key][1][field]
+          : e?.versionedRepresentations[key][1];
+      }
       const name = chartBy?.pipeline ? chartBy?.pipeline(val) : val;
-
       return {
         name: name,
+        key: e.key,
         value: 0,
         fill: COLORS[index % COLORS.length],
       };
@@ -55,7 +65,11 @@ function View({ projects, filters, setSelectedFilter, selectedFilter }) {
       const findNumber = chartFields.filter((q) => q.name == element.name);
       element.value = findNumber.length;
       if (chartData.findIndex((q) => q.name == element.name) < 0)
-        chartData.push({ ...element, value: findNumber.length });
+        chartData.push({
+          ...element,
+          value: findNumber.length,
+          keys: findNumber.map((e) => e.key),
+        });
     });
     //TODO : burayı unique yap
     setChartData(chartData);
@@ -80,6 +94,7 @@ function View({ projects, filters, setSelectedFilter, selectedFilter }) {
             : "",
       })
         .then((res) => {
+          console.log("ISS", res);
           setIssues(res.issues);
           chartDataHandler(res.issues);
         })
@@ -88,7 +103,7 @@ function View({ projects, filters, setSelectedFilter, selectedFilter }) {
   }, [context, selectedFilter]);
 
   if (!context) {
-    return "Loading...";
+    return "Loading...2";
   }
   const projectName = context?.extension?.gadgetConfiguration?.project?.value;
 
@@ -112,60 +127,47 @@ function View({ projects, filters, setSelectedFilter, selectedFilter }) {
                 display: "flex",
                 flexDirection: "row",
                 alignItems: "center",
+                width: "100%",
+                justifyContent: "space-evenly",
               }}
             >
-              <PieChart width={300} height={400}>
-                <Pie
-                  data={chartData}
-                  dataKey="value"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={60}
-                  fill="#8884d8"
-                  label={({
-                    cx,
-                    cy,
-                    midAngle,
-                    innerRadius,
-                    outerRadius,
-                    value,
-                    index,
-                  }) => {
-                    const RADIAN = Math.PI / 180;
-                    // eslint-disable-next-line
-                    const radius =
-                      25 + innerRadius + (outerRadius - innerRadius);
-                    // eslint-disable-next-line
-                    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-                    // eslint-disable-next-line
-                    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-                    return (
-                      <text
-                        x={x}
-                        y={y}
-                        fill="#8884d8"
-                        textAnchor={x > cx ? "start" : "end"}
-                        dominantBaseline="central"
-                      >
-                        {chartData[index]?.name} ({value})
-                      </text>
-                    );
-                  }}
-                />
-              </PieChart>
+              <Chart
+                chartBy={chartBy}
+                chartData={chartData}
+                chartType={context?.extension?.gadgetConfiguration?.chartType}
+              />
               <div>
                 <table>
                   <thead>
                     <tr>
                       <th>{chartBy.label}</th>
-                      <th>Count</th>
+                      <th>Issues</th>
                       <th>Percentage</th>
                     </tr>
                   </thead>
                   {chartData.map((item) => (
                     <tr className="hoverable">
                       <td>{item.name}</td>
-                      <td>{item.value}</td>
+                      <td>
+                        <div
+                          style={{ color: "blue", cursor: "pointer" }}
+                          onClick={() =>
+                            router.open(
+                              `${jqlLink}${
+                                selectedSourceOrFilter?.type == "projects"
+                                  ? '(project IN ("' +
+                                    selectedSourceOrFilter.value +
+                                    '")) '
+                                  : '(filter IN ("' +
+                                    selectedSourceOrFilter.value +
+                                    '"))'
+                              } AND (key in (${item?.keys?.join(",")}))`
+                            )
+                          }
+                        >
+                          {item.value}
+                        </div>
+                      </td>
                       <td>
                         {((item.value * 100) / totalChartValue).toFixed(0)}%
                       </td>

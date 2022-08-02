@@ -4,34 +4,20 @@ import TextField from "@atlaskit/textfield";
 import Button, { ButtonGroup } from "@atlaskit/button";
 import { view } from "@forge/bridge";
 import Select from "@atlaskit/select";
+import Label from "./Label";
 
-const chartByTypes = [
-  { label: "Issue Type", value: "issuetype", field: "name" },
-  { label: "Priority", value: "priority", field: "name" },
-  { label: "Status", value: "status", field: "name" },
-  { label: "Project", value: "project", field: "name" },
-  { label: "Reporter", value: "reporter", field: "displayName" },
-  {
-    label: "Assignee",
-    value: "assignee",
-    pipeline: (data) => (data ? data.displayName : "None"),
-  },
-  {
-    label: "Created",
-    value: "created",
-    pipeline: (data) => moment(data).format("DD/MM/YYYY"),
-  },
-];
+import { chartByTypes } from "./Utils";
 
 function Configration({ projects, filters }) {
   const onSubmit = () => {
-    if (!selectedSourceOrFilter || !selectedSource || !chartBy) {
+    if (!selectedSourceOrFilter || !selectedSource || !chartBy || !chartType) {
       return;
     }
     const formData = {
       selectedSourceOrFilter,
       selectedSource,
       chartBy,
+      chartType,
     };
     view.submit(formData);
   };
@@ -41,6 +27,7 @@ function Configration({ projects, filters }) {
   const [selectedSource, setSelectedSource] = useState();
   const [selectedSourceOrFilter, setSelectedSourceFilter] = useState();
   const [chartBy, setChartBy] = useState();
+  const [chartType, setChartType] = useState("pieChart");
 
   React.useEffect(() => {
     view.getContext().then(setContext);
@@ -53,12 +40,13 @@ function Configration({ projects, filters }) {
       setSelectedSourceFilter(
         context?.extension?.gadgetConfiguration?.selectedSourceOrFilter
       );
+      console.log("ilk", context?.extension?.gadgetConfiguration?.chartBy);
       setChartBy(context?.extension?.gadgetConfiguration?.chartBy);
     }
   }, [context]);
 
   return (
-    <div style={{ minHeight: 300 }}>
+    <div style={{ minHeight: 400 }}>
       <>
         <div
           style={{
@@ -73,6 +61,7 @@ function Configration({ projects, filters }) {
               marginRight: 15,
             }}
           >
+            <Label bold>Source</Label>
             <Select
               inputId="single-select-example"
               className="single-select"
@@ -83,10 +72,14 @@ function Configration({ projects, filters }) {
               ]}
               placeholder="Choose a source"
               value={selectedSource}
-              onChange={(selected) => setSelectedSource(selected)}
+              onChange={(selected) => {
+                setSelectedSource(selected);
+                setSelectedSourceFilter(null);
+              }}
             />
           </div>
           <div style={styles.column}>
+            <Label bold>&nbsp;</Label>
             <Select
               inputId="single-select-example"
               className="single-select"
@@ -116,6 +109,7 @@ function Configration({ projects, filters }) {
           </div>
         </div>
         <div style={{ ...styles.column, marginTop: 20 }}>
+          <Label bold>Chart By </Label>
           <Select
             inputId="single-select-example"
             className="single-select"
@@ -124,6 +118,22 @@ function Configration({ projects, filters }) {
             value={chartBy}
             onChange={(selected) => setChartBy(selected)}
             placeholder="Chart By"
+          />
+        </div>
+        <div style={{ ...styles.column, marginTop: 20 }}>
+          <Label bold>Chart Type </Label>
+          <Select
+            inputId="single-select-example"
+            className="single-select"
+            classNamePrefix="react-select"
+            options={[
+              { label: "Line", value: "lineChart" },
+              { label: "Pie", value: "pieChart" },
+              { label: "Vertical Bar", value: "barChart" },
+              { label: "Horizontal Bar", value: "horizontalBarChart" },
+            ]}
+            onChange={(selected) => setChartType(selected.value)}
+            placeholder="Chart Type"
           />
         </div>
       </>
