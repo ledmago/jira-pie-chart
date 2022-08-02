@@ -2,12 +2,12 @@ import React, { useEffect, useState } from "react";
 import { view, invoke } from "@forge/bridge";
 import View from "./View";
 import Configration from "./Edit";
+import Warning from "./Warning";
 
 function App() {
   const [context, setContext] = useState();
   const [projects, setProjects] = useState([]);
   const [filters, setFilters] = useState([]);
-  const [selectedFilter, setSelectedFilter] = useState(null);
 
   const getProjectsPagination = (page) => {
     invoke("getProjects", { startAt: 0 }).then((response) => {
@@ -34,19 +34,17 @@ function App() {
     getFiltersPagination(0);
   }, []);
 
-  if (!context || projects.length < 1) {
-    return "Loading...";
+  if (!context) {
+    return "Loading..." + projects.length;
   }
 
   return context.extension.entryPoint === "edit" ? (
-    <Configration projects={projects} />
+    <Configration projects={projects} filters={filters} />
+  ) : !context?.extension?.gadgetConfiguration?.selectedSourceOrFilter ||
+    !context?.extension?.gadgetConfiguration?.chartBy ? (
+    <Warning />
   ) : (
-    <View
-      projects={projects}
-      filters={filters}
-      setSelectedFilter={setSelectedFilter}
-      selectedFilter={selectedFilter}
-    />
+    <View projects={projects} filters={filters} />
   );
 }
 

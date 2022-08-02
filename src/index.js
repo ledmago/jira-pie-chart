@@ -38,7 +38,9 @@ resolver.define(
     const response = await api
       .asApp()
       .requestJira(
-        route`/rest/api/3/search?expand=operations,versionedRepresentations,editmeta,changelog,customfield_10010.requestTypePractice,renderedFields&jql=project=${projectName} ${jql}`,
+        route`/rest/api/3/search?expand=operations,versionedRepresentations,editmeta,changelog,customfield_10010.requestTypePractice,renderedFields&jql=${
+          projectName ? "project=" + projectName : ""
+        }${jql ? jql : ""}`,
         {
           headers: {
             Accept: "application/json",
