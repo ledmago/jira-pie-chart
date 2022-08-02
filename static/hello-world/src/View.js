@@ -17,39 +17,27 @@ const COLORS = [
   "#3D3C42",
   "#D61C4E",
 ];
-const chartByTypes = [
-  { label: "Issue Type", value: "issuetype", field: "name" },
-  { label: "Priority", value: "priority", field: "name" },
-  { label: "Status", value: "status", field: "name" },
-  { label: "Project", value: "project", field: "name" },
-  { label: "Reporter", value: "reporter", field: "displayName" },
-  {
-    label: "Assignee",
-    value: "assignee",
-    pipeline: (data) => (data ? data.displayName : "None"),
-  },
-  {
-    label: "Created",
-    value: "created",
-    pipeline: (data) => moment(data).format("DD/MM/YYYY"),
-  },
-];
 
 function View({ projects, filters, setSelectedFilter, selectedFilter }) {
   const [context, setContext] = useState();
   const [issues, setIssues] = useState(null);
-  const [chartBy, setChartBy] = useState(null);
   const [chartData, setChartData] = useState([]);
 
-  useEffect(() => {}, []);
+  const chartBy = context?.extension?.gadgetConfiguration?.chartBy;
+  const selectedSourceOrFilter =
+    context?.extension?.gadgetConfiguration?.selectedSourceOrFilter;
 
   useEffect(() => {
     view.getContext().then(setContext);
   }, []);
-  useEffect(() => {
-    if (!issues || !chartBy) return;
+
+  //Todo : 1. artık props olarak değil direkt context üzerinden geliyor.
+
+  const chartDataHandler = (issues) => {
+    if (!issues || !chartBy || !selectedSourceOrFilter) return;
     const key = chartBy?.value;
     const field = chartBy?.field;
+
     const chartFields = issues.map((e, index) => {
       const val = field
         ? e?.versionedRepresentations[key][1][field]
@@ -71,24 +59,29 @@ function View({ projects, filters, setSelectedFilter, selectedFilter }) {
     });
     //TODO : burayı unique yap
     setChartData(chartData);
-  }, [selectedFilter, chartBy]);
+  };
 
   const totalChartValue = chartData
     ? chartData.reduce((acc, obj) => acc + obj?.value || 0, 0)
     : 0;
 
   useEffect(() => {
-    const projectName = context?.extension?.gadgetConfiguration?.project?.value;
-    const findProject = projects.find((e) => e.name == projectName);
-    const issueTypes = findProject?.issueTypes;
-    if (context && projectName) {
+    if (context) {
       invoke("getIssues", {
-        projectName,
-        jql: selectedFilter?.jql ? "AND " + selectedFilter?.jql : "",
+        projectName:
+          selectedSourceOrFilter?.type == "projects"
+            ? selectedSourceOrFilter.value
+            : "",
+        jql:
+          selectedSourceOrFilter?.type == "filters"
+            ? selectedSourceOrFilter?.jql
+                .replace("&gt;", ">")
+                ?.replace("$lt;", "<")
+            : "",
       })
         .then((res) => {
           setIssues(res.issues);
-          setChartBy(chartByTypes[0]);
+          chartDataHandler(res.issues);
         })
         .catch((e) => console.log("HATA", e));
     }
@@ -97,37 +90,10 @@ function View({ projects, filters, setSelectedFilter, selectedFilter }) {
   if (!context) {
     return "Loading...";
   }
-
-  const projectName =
-    context?.extension?.gadgetConfiguration?.project?.value || projects[0].name;
+  const projectName = context?.extension?.gadgetConfiguration?.project?.value;
 
   return (
     <div>
-      <div style={styles.filterContainer}>
-        <div style={styles.colm}>
-          <Select
-            inputId="single-select-example"
-            className="single-select"
-            classNamePrefix="react-select"
-            options={chartByTypes}
-            onChange={(selected) => setChartBy(selected)}
-            placeholder="Chart By"
-          />
-        </div>
-        <div style={styles.colm}>
-          <Select
-            inputId="single-select-example"
-            className="single-select"
-            classNamePrefix="react-select"
-            options={filters.map((e) => ({ label: e.name, value: e.id }))}
-            onChange={(selected) => {
-              setIssues(null);
-              setSelectedFilter(filters.find((e) => e.id == selected?.value));
-            }}
-            placeholder="Choose a filter"
-          />
-        </div>
-      </div>
       {!issues && <>Loading...</>}
       {issues && (
         <div style={styles.container}>
@@ -200,7 +166,9 @@ function View({ projects, filters, setSelectedFilter, selectedFilter }) {
                     <tr className="hoverable">
                       <td>{item.name}</td>
                       <td>{item.value}</td>
-                      <td>{(item.value * 100) / totalChartValue}%</td>
+                      <td>
+                        {((item.value * 100) / totalChartValue).toFixed(0)}%
+                      </td>
                     </tr>
                   ))}
                   <tr
